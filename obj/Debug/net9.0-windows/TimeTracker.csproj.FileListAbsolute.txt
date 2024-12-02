@@ -1,4 +1,0 @@
-C:\Users\Xolotl\Documents\projects\C#\TimeTracker\obj\Debug\net9.0-windows\TimeTracker.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Xolotl\Documents\projects\C#\TimeTracker\obj\Debug\net9.0-windows\TimeTracker.AssemblyInfoInputs.cache
-C:\Users\Xolotl\Documents\projects\C#\TimeTracker\obj\Debug\net9.0-windows\TimeTracker.AssemblyInfo.cs
-C:\Users\Xolotl\Documents\projects\C#\TimeTracker\obj\Debug\net9.0-windows\TimeTracker.csproj.CoreCompileInputs.cache
