@@ -2,32 +2,37 @@
 
 namespace TimeTracker
 {
-    public class AppData
+   public class AppData
+{
+    public required string Name { get; set; }  // Required ensures it must be set
+    public TimeSpan TotalTime { get; set; }
+    public int LaunchCount { get; set; }
+    public string? Path { get; set; }  // Nullable
+    public string? IconPath { get; set; }  // Nullable
+
+    public bool IsCurrentlyRunning { get; set; }  // New property to fix errors in MainForm.cs
+
+    // Parse a line from the TXT file into an AppData object
+    public static AppData FromString(string line)
     {
-        public string Name { get; set; } = string.Empty;
-        public string Path { get; set; } = string.Empty;
-        public string IconPath { get; set; } = string.Empty;
-        public TimeSpan TotalTime { get; set; } = TimeSpan.Zero;
-        public int LaunchCount { get; set; } = 0;
-        public bool IsCurrentlyRunning { get; set; } = false; // Neues Feld für Zustand
-
-        public override string ToString()
+        try
         {
-            return $"{Name}|{Path}|{IconPath}|{TotalTime}|{LaunchCount}|{IsCurrentlyRunning}";
-        }
+            var parts = line.Split(':');
+            if (parts.Length < 2) throw new FormatException("Invalid line format.");
 
-        public static AppData FromString(string data)
-        {
-            var parts = data.Split('|');
             return new AppData
             {
-                Name = parts[0],
-                Path = parts[1],
-                IconPath = parts[2],
-                TotalTime = TimeSpan.Parse(parts[3]),
-                LaunchCount = int.Parse(parts[4]),
-                IsCurrentlyRunning = parts.Length > 5 && bool.TryParse(parts[5], out var running) && running
+                Name = parts[0].Trim(),
+                TotalTime = TimeSpan.Parse(parts[1].Trim()),
+                LaunchCount = parts.Length > 2 && int.TryParse(parts[2].Trim(), out var count) ? count : 0,
+                IsCurrentlyRunning = false  // Default value
             };
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing line: {line}. {ex.Message}");
+            return null;
+        }
     }
+}
 }

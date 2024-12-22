@@ -1,3 +1,0 @@
-Godot 4.3|C:\Users\Xolotl\Desktop\Godot_v4.3-stable_mono_win64\Godot_v4.3-stable_mono_win64.exe|C:\Users\Xolotl\Pictures\icos\Godot.png|00:00:45|1|False
-VScode|C:\Users\Xolotl\AppData\Local\Programs\Microsoft VS Code\Code.exe|C:\Users\Xolotl\Pictures\icos\vscode.png|00:00:19|1|True
-Aseprite|C:\aseprite\build\bin\aseprite.exe|C:\Users\Xolotl\Pictures\icos\Aseprite.png|00:00:00|0|False

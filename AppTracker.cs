@@ -1,110 +1,129 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace TimeTracker
 {
     public class AppTracker
     {
+        private static readonly HttpClient client = new HttpClient();
         public List<AppData> Apps { get; private set; } = new List<AppData>();
 
-        /// <summary>
-        /// Lädt die App-Daten aus der angegebenen Datei.
-        /// Wenn die Datei nicht existiert, wird sie erstellt.
-        /// </summary>
         public void LoadData(string filePath)
         {
             try
             {
-                if (!File.Exists(filePath))
+                if (File.Exists(filePath))
                 {
-                    Console.WriteLine("Data file not found. Creating a new one.");
-                    File.WriteAllText(filePath, string.Empty);
-                }
-                else
-                {
-                    Console.WriteLine($"Loading data from {filePath}...");
-                    var lines = File.ReadAllLines(filePath);
-                    foreach (var line in lines)
-                    {
-                        if (!string.IsNullOrWhiteSpace(line))
-                        {
-                            Apps.Add(AppData.FromString(line));
-                        }
-                    }
-                    Console.WriteLine($"Loaded {Apps.Count} apps.");
+                    var json = File.ReadAllText(filePath);
+                    Apps = JsonConvert.DeserializeObject<List<AppData>>(json) ?? new List<AppData>();
+                    Console.WriteLine("Data loaded successfully.");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error loading data: {ex.Message}");
-                throw;
             }
         }
 
-        /// <summary>
-        /// Speichert die App-Daten in der angegebenen Datei.
-        /// </summary>
         public void SaveData(string filePath)
         {
             try
             {
-                Console.WriteLine($"Saving data to {filePath}...");
-                File.WriteAllLines(filePath, Apps.ConvertAll(app => app.ToString()));
+                var json = JsonConvert.SerializeObject(Apps, Formatting.Indented);
+                File.WriteAllText(filePath, json);
                 Console.WriteLine("Data saved successfully.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving data: {ex.Message}");
-                throw;
             }
         }
 
-        /// <summary>
-        /// Fügt eine neue App zur Überwachungsliste hinzu.
-        /// </summary>
         public void AddApp(AppData app)
+        {
+            if (app != null)
+            {
+                Apps.Add(app);
+                Console.WriteLine($"App added: {app.Name}");
+            }
+        }
+
+        public void ConvertTxtToJson(string txtFilePath, string jsonFilePath)
         {
             try
             {
-                if (app == null)
+                if (!File.Exists(txtFilePath))
                 {
-                    throw new ArgumentNullException(nameof(app), "App cannot be null.");
+                    Console.WriteLine($"TXT file not found: {txtFilePath}");
+                    return;
                 }
 
-                Console.WriteLine($"Adding app: {app.Name}");
-                Apps.Add(app);
+                var apps = new List<AppData>();
+                var lines = File.ReadAllLines(txtFilePath);
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        var app = AppData.FromString(line);
+                        if (app != null) apps.Add(app);
+                    }
+                }
+
+                var jsonData = JsonConvert.SerializeObject(apps, Formatting.Indented);
+                File.WriteAllText(jsonFilePath, jsonData);
+                Console.WriteLine($"Converted {txtFilePath} to {jsonFilePath}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error adding app: {ex.Message}");
-                throw;
+                Console.WriteLine($"Error converting TXT to JSON: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Aktualisiert die Nutzungsdaten einer bestehenden App.
-        /// </summary>
-        public void UpdateApp(string appName, TimeSpan sessionTime)
+        public async Task UploadJsonToServer(string jsonFilePath, string serverUrl)
         {
             try
             {
-                var app = Apps.Find(a => a.Name.Equals(appName, StringComparison.OrdinalIgnoreCase));
-                if (app != null)
+                if (!File.Exists(jsonFilePath))
                 {
-                    Console.WriteLine($"Updating app: {app.Name}");
-                    app.TotalTime += sessionTime;
-                    app.LaunchCount++;
+                    Console.WriteLine($"JSON file not found: {jsonFilePath}");
+                    return;
+                }
+
+                var jsonData = File.ReadAllText(jsonFilePath);
+                var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+                Console.WriteLine($"Uploading {jsonFilePath} to {serverUrl}...");
+                var response = await client.PostAsync(serverUrl, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Upload successful!");
                 }
                 else
                 {
-                    Console.WriteLine($"App not found: {appName}");
+                    Console.WriteLine($"Upload failed with status code: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating app: {ex.Message}");
-                throw;
+                Console.WriteLine($"Error uploading JSON: {ex.Message}");
+            }
+        }
+
+        public async Task ProcessActivityData(string txtFilePath, string jsonFilePath, string serverUrl)
+        {
+            try
+            {
+                ConvertTxtToJson(txtFilePath, jsonFilePath);
+                await UploadJsonToServer(jsonFilePath, serverUrl);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing activity data: {ex.Message}");
             }
         }
     }
