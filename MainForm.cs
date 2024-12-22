@@ -20,7 +20,7 @@ namespace TimeTracker
         private System.Windows.Forms.Timer _processCheckTimer = new System.Windows.Forms.Timer();
         private CheckBox _startWithWindowsCheckBox = new CheckBox();
 
-        private const string ServerUrl = "http://45.133.9.62:3000/upload";
+        private const string ServerUrl = "yourServer";
 
         public MainForm(AppTracker tracker)
         {
